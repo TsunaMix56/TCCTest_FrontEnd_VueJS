@@ -2,6 +2,11 @@ import axios from 'axios'
 
 const API_BASE_URL = 'http://localhost:5214/api'
 
+// Configure axios defaults
+axios.defaults.headers.common['Content-Type'] = 'application/json'
+axios.defaults.timeout = 30000
+axios.defaults.withCredentials = false
+
 class ApiService {
   constructor() {
     this.token = null
@@ -14,11 +19,19 @@ class ApiService {
         username: 'TCCTest',
         password: 'Test!456'
       })
-      this.token = response.data.token || response.data.access_token || response.data
+      
+      this.token = response.data.token || response.data.access_token || response.data.accessToken || response.data
       return this.token
     } catch (error) {
-      console.error('Error getting token:', error)
-      throw error
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่าเซิร์ฟเวอร์ API ทำงานอยู่')
+      } else if (error.code === 'NETWORK_ERROR' || error.message === 'Network Error') {
+        throw new Error('เกิดข้อผิดพลาดด้านเครือข่าย อาจเป็นปัญหา CORS')
+      } else if (error.response) {
+        throw new Error(`Server Error: ${error.response.status} - ${error.response.data?.message || error.response.statusText}`)
+      } else {
+        throw new Error(`Network Error: ${error.message}`)
+      }
     }
   }
 
@@ -41,7 +54,6 @@ class ApiService {
       
       return response.data
     } catch (error) {
-      console.error('Login error:', error)
       throw error
     }
   }
@@ -65,7 +77,6 @@ class ApiService {
       
       return response.data
     } catch (error) {
-      console.error('Registration error:', error)
       throw error
     }
   }

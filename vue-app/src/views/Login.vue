@@ -29,8 +29,8 @@
             required
             class="form-input"
           />
-          <div v-if="errorMessage" class="error-message">
-            {{ errorMessage }}
+          <div v-if="error || getError('ชื่อผู้ใช้') || getError('รหัสผ่าน')" class="error-message">
+            {{ error || getError('ชื่อผู้ใช้') || getError('รหัสผ่าน') }}
           </div>
         </div>
         
@@ -54,47 +54,41 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import apiService from '../services/apiService.js'
+import { useAuth } from '../composables/useAuth.js'
+import { useFormValidation } from '../composables/useFormValidation.js'
 
 export default {
-  name: 'Login',
+  name: 'LoginPage',
   setup() {
     const router = useRouter()
     const username = ref('')
     const password = ref('')
-    const errorMessage = ref('')
-    const isLoading = ref(false)
+    
+    // ใช้ Auth hook
+    const { login, isLoading, error } = useAuth()
+    
+    // ใช้ Form Validation hook
+    const { validateRequired, getError, clearAllErrors } = useFormValidation()
 
     const handleLogin = async () => {
-      if (!username.value || !password.value) {
-        errorMessage.value = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'
+      clearAllErrors()
+      
+      // Validate form
+      const isValid = validateRequired({
+        'ชื่อผู้ใช้': username.value,
+        'รหัสผ่าน': password.value
+      })
+      
+      if (!isValid) {
         return
       }
-
-      isLoading.value = true
-      errorMessage.value = ''
-
-      try {
-        const response = await apiService.login(username.value, password.value)
-        
-        // ตรวจสอบว่า response มี message ที่มีคำว่า "Welcome User"
-        if (response.message && response.message.includes('Welcome User')) {
-          // เก็บข้อความไว้ใน localStorage เพื่อส่งไปหน้า Welcome
-          localStorage.setItem('welcomeMessage', response.message)
-          router.push('/welcome')
-        } else {
-          // ถ้าไม่ใช่ success message ให้แสดง error
-          errorMessage.value = response.message || 'การเข้าสู่ระบบไม่สำเร็จ'
-        }
-      } catch (error) {
-        // แสดง error message จาก API response
-        if (error.response && error.response.data && error.response.data.message) {
-          errorMessage.value = error.response.data.message
-        } else {
-          errorMessage.value = 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
-        }
-      } finally {
-        isLoading.value = false
+      
+      // เรียกใช้ login hook
+      const result = await login(username.value, password.value)
+      
+      if (result.success) {
+        console.log('Login successful with hook, redirecting to welcome page')
+        router.push('/welcome')
       }
     }
 
@@ -105,10 +99,11 @@ export default {
     return {
       username,
       password,
-      errorMessage,
+      error,
       isLoading,
       handleLogin,
-      goToRegister
+      goToRegister,
+      getError
     }
   }
 }

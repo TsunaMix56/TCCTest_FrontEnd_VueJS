@@ -30,18 +30,23 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth.js'
 
 export default {
   name: 'Welcome',
   setup() {
     const router = useRouter()
     const welcomeMessage = ref('')
+    
+    // ใช้ Auth hook
+    const { logout, checkLoginStatus, user } = useAuth()
 
     onMounted(() => {
-      // ดึงข้อความ welcome จาก localStorage
-      const message = localStorage.getItem('welcomeMessage')
-      if (message) {
-        welcomeMessage.value = message
+      // ตรวจสอบสถานะการ login
+      checkLoginStatus()
+      
+      if (user.isLoggedIn && user.welcomeMessage) {
+        welcomeMessage.value = user.welcomeMessage
       } else {
         // ถ้าไม่มี message ให้กลับไปหน้า login
         router.push('/')
@@ -49,8 +54,8 @@ export default {
     })
 
     const goToLogin = () => {
-      // ลบข้อความจาก localStorage และกลับไปหน้า login
-      localStorage.removeItem('welcomeMessage')
+      // ใช้ logout hook เพื่อล้างข้อมูล
+      logout()
       router.push('/')
     }
 

@@ -69,7 +69,7 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import apiService from '../services/apiService.js'
+import { useAuth } from '../composables/useAuth.js'
 
 export default {
   name: 'Register',
@@ -80,7 +80,9 @@ export default {
     const confirmPassword = ref('')
     const errorMessage = ref('')
     const successMessage = ref('')
-    const isLoading = ref(false)
+    
+    // ใช้ Auth hook
+    const { register, isLoading } = useAuth()
 
     const handleRegister = async () => {
       errorMessage.value = ''
@@ -98,28 +100,18 @@ export default {
         return
       }
 
-      isLoading.value = true
-
-      try {
-        const response = await apiService.register(username.value, password.value)
-        
-        // แสดงข้อความสำเร็จ
+      // เรียกใช้ register hook
+      const result = await register(username.value, password.value)
+      
+      if (result.success) {
         successMessage.value = 'สมัครสมาชิกสำเร็จ! กำลังนำคุณไปหน้าเข้าสู่ระบบ...'
         
         // รอ 2 วินาที แล้วไปหน้า login
         setTimeout(() => {
           router.push('/')
         }, 2000)
-        
-      } catch (error) {
-        // แสดง error message จาก API response
-        if (error.response && error.response.data && error.response.data.message) {
-          errorMessage.value = error.response.data.message
-        } else {
-          errorMessage.value = 'เกิดข้อผิดพลาดในการสมัครสมาชิก'
-        }
-      } finally {
-        isLoading.value = false
+      } else {
+        errorMessage.value = result.error
       }
     }
 
