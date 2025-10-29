@@ -15,6 +15,7 @@
             v-model="username"
             placeholder="กรุณากรอกชื่อผู้ใช้"
             required
+            maxlength="24"
             class="form-input"
           />
         </div>
@@ -27,6 +28,7 @@
             v-model="password"
             placeholder="กรุณากรอกรหัสผ่าน"
             required
+            maxlength="24"
             class="form-input"
           />
           <div v-if="error || getError('ชื่อผู้ใช้') || getError('รหัสผ่าน')" class="error-message">
