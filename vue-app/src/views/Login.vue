@@ -45,7 +45,18 @@
               สมัครสมาชิก
             </button>
           </p>
+          <p style="margin-top: 10px;">
+            <button type="button" @click="showTokenTest = !showTokenTest" class="test-link">
+              {{ showTokenTest ? '🔼 ซ่อน' : '🔽 แสดง' }} Token Test
+            </button>
+          </p>
         </div>
+      </form>
+      
+      <!-- Token Test Component -->
+      <div v-if="showTokenTest" class="token-test-container">
+        <TokenTest />
+      </div>
       </form>
     </div>
   </div>
@@ -56,13 +67,18 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth.js'
 import { useFormValidation } from '../composables/useFormValidation.js'
+import TokenTest from '../components/TokenTest.vue'
 
 export default {
   name: 'LoginPage',
+  components: {
+    TokenTest
+  },
   setup() {
     const router = useRouter()
     const username = ref('')
     const password = ref('')
+    const showTokenTest = ref(false)
     
     // ใช้ Auth hook
     const { login, isLoading, error } = useAuth()
@@ -103,7 +119,8 @@ export default {
       isLoading,
       handleLogin,
       goToRegister,
-      getError
+      getError,
+      showTokenTest
     }
   }
 }
@@ -240,5 +257,26 @@ export default {
 
 .register-link:hover {
   color: #2e7d32;
+}
+
+.test-link {
+  background: none;
+  border: none;
+  color: #ff9800;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 12px;
+}
+
+.test-link:hover {
+  color: #f57c00;
+}
+
+.token-test-container {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e8f5e8;
 }
 </style>
